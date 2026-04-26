@@ -1673,14 +1673,14 @@ int main (int argc, char **argv)
 		int idx = 1;
 		for (auto &e : monitor_list)
 		{
-			mondev_t mon(logger, e, "MSI Gaming Controller", "");
+			mondev_t mon(logger, e, "", "");
 			pprintf("%d,%s,%s,%s,%s\n", idx, mon.serial(), mon.manufacturer(), mon.product(), e.path);
 			idx ++;
 		}
 		//return E_OK;
 	}
 
-	mondev_t usb(logger, monitor_list[monitor ? monitor - 1 : 0], "MSI Gaming Controller", serial);
+	mondev_t usb(logger, monitor_list[monitor ? monitor - 1 : 0], "", serial);
 
 	if (usb)
 	{
