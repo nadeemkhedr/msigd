@@ -24,7 +24,7 @@ make TARGETOS=osx \
   LIBS="-lhidapi"
 
 # (optional) put it on your PATH
-ln -sf "$PWD/msigd" /opt/homebrew/bin/msigd
+sudo ln -sf "$PWD/msigd" /usr/local/bin/msigd
 ```
 
 ### 3. Confirm the monitor is detected
