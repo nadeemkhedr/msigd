@@ -1,4 +1,139 @@
-# 1. msigd
+# msigd — MPG 274URDFW E16M fork
+
+> Fork of [`couriersud/msigd`](https://github.com/couriersud/msigd) that adds support for the **MSI MPG 274URDFW E16M** (27" 4K dual-mode QD-OLED, USB VID `0x1462` / PID `0x3fa4`). Upstream PR: [couriersud/msigd#70](https://github.com/couriersud/msigd/pull/70).
+>
+> The main reason this fork exists: `m1ddc` and other DDC/CI tools can't switch the input source on this monitor — MSI handles input over their own USB HID protocol. `msigd` speaks that protocol, but upstream rejects this monitor's identification bytes and its newer USB product string. Two small patches fix both.
+
+## Quick start (macOS, Apple Silicon)
+
+### 1. Install build prereqs
+
+```fish
+brew install hidapi
+```
+
+### 2. Clone and build
+
+```fish
+git clone https://github.com/nadeemkhedr/msigd.git ~/apps/msigd
+cd ~/apps/msigd
+
+make TARGETOS=osx \
+  CXXEXTRAFLAGS="-I/opt/homebrew/opt/hidapi/include" \
+  LDFLAGS="-L/opt/homebrew/opt/hidapi/lib -framework IOKit -framework CoreFoundation -framework AppKit" \
+  LIBS="-lhidapi"
+
+# (optional) put it on your PATH
+ln -sf "$PWD/msigd" /opt/homebrew/bin/msigd
+```
+
+### 3. Confirm the monitor is detected
+
+```fish
+msigd --info
+# Expected:
+#   Vendor Id:      0x1462
+#   Product Id:     0x3fa4
+#   Product:        MSI Monitor MPG 274URDFW E16M
+#   Monitor Series: MPG 274URDFW E16M
+#   LED support:    MysticOptix
+```
+
+If `--info` doesn't show your monitor, run `msigd --list` to see what HID devices are detected.
+
+## Examples
+
+### Get monitor info
+
+```fish
+msigd --info                    # vendor/product/serial/series
+msigd --list                    # all detected MSI monitors
+msigd -q                        # full readout of every readable setting
+```
+
+### Read specific settings
+
+```fish
+msigd -q -f input               # current input source
+msigd -q -f brightness          # current brightness
+msigd -q -f input,brightness,contrast,frequency,kvm,auto_scan
+```
+
+### Change the input source
+
+```fish
+msigd --input hdmi1             # switch to HDMI 1
+msigd --input hdmi2             # switch to HDMI 2
+msigd --input dp                # switch to DisplayPort
+msigd --input usbc              # switch back to Mac (Type-C)
+```
+
+> ℹ️ When you switch away from `usbc` the Mac loses video, but the **USB control channel stays alive** as long as the monitor's KVM is set to `type_c` (`msigd -q -f kvm` should print `kvm : type_c`). That means `msigd --input usbc` from the same terminal still works to switch back — even blind, or via a delayed command:
+>
+> ```fish
+> sleep 10; and msigd --input usbc
+> ```
+
+### Picture settings
+
+```fish
+msigd --brightness 60           # 0–100
+msigd --contrast 70             # 0–100
+msigd --sharpness 2             # 0–5
+msigd --pro_mode user           # user / anti_blue / movie / office / srgb / adobe_rgb / dci_p3 / eco
+msigd --night_vision off        # off / normal / strong / strongest / ai
+msigd --eye_saver on            # low blue light
+```
+
+### Color
+
+```fish
+msigd --color_preset normal     # cool / normal / warm / custom
+msigd --color_red 50            # 0–100 (only when color_preset = custom)
+msigd --color_green 50
+msigd --color_blue 50
+```
+
+### KVM, auto-scan, refresh display
+
+```fish
+msigd --kvm type_c              # auto / upstream / type_c
+msigd --auto_scan on            # auto-switch to active source
+msigd --refresh_display on      # show refresh rate overlay
+msigd --refresh_position right_top
+msigd --screen_info on          # show input/resolution overlay briefly
+```
+
+### Quick fish abbreviations
+
+Drop these into `~/.config/fish/config.fish` for one-key switching:
+
+```fish
+abbr -a mpg-hdmi1 'msigd --input hdmi1'
+abbr -a mpg-hdmi2 'msigd --input hdmi2'
+abbr -a mpg-dp    'msigd --input dp'
+abbr -a mpg-mac   'msigd --input usbc'
+abbr -a mpg-info  'msigd -q -f input,brightness,contrast,frequency,kvm,auto_scan'
+```
+
+### Discover everything else
+
+```fish
+msigd --help                    # full list of supported settings
+msigd -q                        # all current values
+```
+
+The mapping in this fork reuses the upstream `MAG274QRX` settings profile, so anything in `msigd --help` under that section should work on this monitor.
+
+---
+
+## Original upstream README
+
+The original [`couriersud/msigd`](https://github.com/couriersud/msigd) project supports many more MSI monitors. Its full README follows below.
+
+---
+
+# 1. msigd (upstream)
 
 The `msigd` command line tool allows you to change most settings for MSI monitors which can be set in the monitor's OSD menu.
 
