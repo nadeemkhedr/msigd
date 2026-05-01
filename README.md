@@ -4,17 +4,17 @@
 >
 > The main reason this fork exists: `m1ddc` and other DDC/CI tools can't switch the input source on this monitor — MSI handles input over their own USB HID protocol. `msigd` speaks that protocol, but upstream rejects this monitor's identification bytes and its newer USB product string. Two small patches fix both.
 
-## Quick start (macOS, Apple Silicon)
+## Quick start
 
-### 1. Install build prereqs
+Pick your platform, then jump to [Confirm the monitor is detected](#confirm-the-monitor-is-detected).
+
+### macOS (Apple Silicon)
 
 ```fish
+# 1. Install build prereqs
 brew install hidapi
-```
 
-### 2. Clone and build
-
-```fish
+# 2. Clone and build
 git clone https://github.com/nadeemkhedr/msigd.git ~/apps/msigd
 cd ~/apps/msigd
 
@@ -23,11 +23,55 @@ make TARGETOS=osx \
   LDFLAGS="-L/opt/homebrew/opt/hidapi/lib -framework IOKit -framework CoreFoundation -framework AppKit" \
   LIBS="-lhidapi"
 
-# (optional) put it on your PATH
+# 3. (optional) put it on your PATH
 sudo ln -sf "$PWD/msigd" /usr/local/bin/msigd
 ```
 
-### 3. Confirm the monitor is detected
+### Linux (Debian / Ubuntu)
+
+```sh
+# 1. Install build prereqs
+sudo apt install libusb-dev libhidapi-dev git build-essential
+
+# 2. Clone and build
+git clone https://github.com/nadeemkhedr/msigd.git ~/apps/msigd
+cd ~/apps/msigd
+make
+
+# 3. (optional) put it on your PATH
+sudo ln -sf "$PWD/msigd" /usr/local/bin/msigd
+```
+
+### Linux (Arch)
+
+```sh
+# 1. Install build prereqs
+sudo pacman -S libusb hidapi git base-devel
+
+# 2. Clone and build
+git clone https://github.com/nadeemkhedr/msigd.git ~/apps/msigd
+cd ~/apps/msigd
+make TARGETOS=arch
+
+# 3. (optional) put it on your PATH
+sudo ln -sf "$PWD/msigd" /usr/local/bin/msigd
+```
+
+### Linux: allow non-root USB access (one-time)
+
+Without this, `msigd` requires `sudo` because it talks directly to a USB HID device. Add a udev rule for the monitor's VID/PID:
+
+```sh
+sudo tee /etc/udev/rules.d/51-msi-gaming-device.rules > /dev/null <<'EOF'
+SUBSYSTEM=="usb",  ATTR{idVendor}=="1462",  ATTR{idProduct}=="3fa4",  TAG+="uaccess"
+KERNEL=="hidraw*", ATTRS{idVendor}=="1462", ATTRS{idProduct}=="3fa4", TAG+="uaccess"
+EOF
+sudo udevadm control --reload-rules
+```
+
+Then power-cycle the monitor (off, then on) so udev reapplies the rules to the freshly-attached HID device.
+
+### Confirm the monitor is detected
 
 ```fish
 msigd --info
