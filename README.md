@@ -415,17 +415,19 @@ This program needs root privilidges. Use with care.
 Alternatively you may use udev to grant user access rights. More information is
 available on here: [Documentation on askubuntu](https://askubuntu.com/questions/978552/how-do-i-make-libusb-work-as-non-root)
 
-In a nutshell: 
+In a nutshell:
 
-* Ensure that your system has a group `plugdev` and that the current user is a member of the `plugdev` group.
-
-* Create `/etc/udev/rules.d/51-msi-gaming-device.rules`:
+* Create `/etc/udev/rules.d/51-msi-gaming-device.rules` (this is also shipped under `udev/` in the repo):
 
 ```
-# Allow access to members of plugdev - both for usb and hidraw access
-SUBSYSTEM=="usb", ATTR{idVendor}=="1462", ATTR{idProduct}=="3fa4", GROUP="plugdev", TAG+="uaccess"
-KERNEL=="hidraw*", ATTRS{idVendor}=="1462", ATTRS{idProduct}=="3fa4", GROUP="plugdev", TAG+="uaccess"
+# Grant the active local user access via systemd-logind ACLs (uaccess).
+# Works on Arch, Debian, Ubuntu and Fedora out of the box.
+SUBSYSTEM=="usb",  ATTR{idVendor}=="1462",  ATTR{idProduct}=="3fa4",  TAG+="uaccess"
+KERNEL=="hidraw*", ATTRS{idVendor}=="1462", ATTRS{idProduct}=="3fa4", TAG+="uaccess"
 ```
+
+> Older versions of this rule used `GROUP="plugdev"`. That distro-specific group does not exist on Arch (and some others), and a missing group causes udev to drop the entire rule line — including `TAG+="uaccess"` — leaving the device root-only. The rule above avoids that pitfall.
+
 * Execute
 
 ```sh

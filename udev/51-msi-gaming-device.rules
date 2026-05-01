@@ -1,5 +1,7 @@
 #
-# Allow access to members of group plugdev - both for usb and hidraw access
+# Grant the active local user access to the monitor's USB and hidraw nodes
+# via systemd-logind ACLs (TAG+="uaccess"). This works on Arch, Debian,
+# Ubuntu and Fedora out of the box without requiring a plugdev group.
 #
-SUBSYSTEM=="usb", ATTR{idVendor}=="1462", ATTR{idProduct}=="3fa4", GROUP="plugdev", TAG+="uaccess"
-KERNEL=="hidraw*", ATTRS{idVendor}=="1462", ATTRS{idProduct}=="3fa4", GROUP="plugdev", TAG+="uaccess"
+SUBSYSTEM=="usb",  ATTR{idVendor}=="1462",  ATTR{idProduct}=="3fa4",  TAG+="uaccess"
+KERNEL=="hidraw*", ATTRS{idVendor}=="1462", ATTRS{idProduct}=="3fa4", TAG+="uaccess"
